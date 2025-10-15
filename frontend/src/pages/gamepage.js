@@ -6,6 +6,11 @@ import Game2 from "../components/game2";
 import Game3 from "../components/game3";
 import Game4 from "../components/game4";
 import Game5 from "../components/game5";
+import Game6 from "../components/game6";
+import Game7 from "../components/game7";
+import Game8 from "../components/game8";
+import Game9 from "../components/game9";
+import Game10 from "../components/game10";
 
 const SESSION_KEY = "game_play_state_v1"; // phải giống với Home
 
@@ -60,7 +65,12 @@ export default function GamePage() {
     game2: <Game2 payload={payload} />,
     game3: <Game3 payload={payload} />,
     game4: <Game4 payload={payload} />,
-    game5: <Game5 payload={payload} />
+    game5: <Game5 payload={payload} />,
+    game6: <Game6 payload={payload} />,
+    game7: <Game7 payload={payload} />,
+    game8: <Game8 payload={payload} />,
+    game9: <Game9 payload={payload} />,
+    game10: <Game10 payload={payload} />,
   };
 
   return (

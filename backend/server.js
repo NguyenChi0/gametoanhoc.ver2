@@ -91,7 +91,6 @@ function buildAnswers(row) {
   return answers;
 }
 
-
 // ====== Endpoints ======
 
 // 1) Lấy danh sách lớp (grades)
@@ -231,26 +230,32 @@ app.get('/api/questions/:id', async (req, res) => {
   }
 });
 
-
-
 //=========Lưu điểm=========================
 app.post('/api/score/increment', async (req, res) => {
   try {
     const { userId, delta = 1 } = req.body;
+
     if (!userId || typeof userId !== 'number') {
       return res.status(400).json({ success: false, message: 'userId (number) required' });
     }
 
-    // UPDATE atomic: tăng score
-    await pool.query('UPDATE users SET score = score + ? WHERE id = ?', [delta, userId]);
+    // Tăng cả score và week_score cùng lúc (nếu week_score là NULL thì set về 0 trước khi cộng)
+    await pool.query(
+      'UPDATE users SET score = score + ?, week_score = COALESCE(week_score, 0) + ? WHERE id = ?',
+      [delta, delta, userId]
+    );
 
-    // Lấy lại score hiện tại
-    const [rows] = await pool.query('SELECT score FROM users WHERE id = ?', [userId]);
+    // Lấy lại score & week_score hiện tại
+    const [rows] = await pool.query('SELECT score, week_score FROM users WHERE id = ?', [userId]);
     if (!rows || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    return res.json({ success: true, score: rows[0].score });
+    return res.json({
+      success: true,
+      score: rows[0].score,
+      week_score: rows[0].week_score,
+    });
   } catch (err) {
     console.error('Error /api/score/increment', err);
     return res.status(500).json({ success: false, message: 'Server error' });
@@ -258,6 +263,161 @@ app.post('/api/score/increment', async (req, res) => {
 });
 
 
+// ==========================
+//  API: LẤY THÔNG TIN NGƯỜI DÙNG
+// ==========================
+app.get('/api/user/:username', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    // Lấy thông tin người dùng
+    const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+
+    let user = rows[0];
+
+    // --- 1) Tính thứ hạng tuần (week rank) ---
+    const userWeekScore = Number(user.week_score) || 0;
+    const [countRows] = await pool.execute(
+      'SELECT COUNT(*) AS cnt FROM users WHERE week_score > ?',
+      [userWeekScore]
+    );
+    const rank = (countRows[0] && Number(countRows[0].cnt) !== NaN)
+      ? (Number(countRows[0].cnt) + 1)
+      : null;
+
+    // --- 2) Cập nhật achievements nếu cần ---
+    let newAchievementId = null;
+    if (rank && userWeekScore > 0 && rank >= 1 && rank <= 5) {
+      newAchievementId = rank; // map top1..5
+    }
+    const currentAchievement = user.achievements;
+    if (newAchievementId !== null && newAchievementId !== currentAchievement) {
+      await pool.execute('UPDATE users SET achievements = ? WHERE id = ?', [newAchievementId, user.id]);
+      user.achievements = newAchievementId;
+    }
+
+    // --- 3) Lấy chi tiết achievement ---
+    let achievement = null;
+    if (user.achievements) {
+      const [achRows] = await pool.execute(
+        'SELECT id, name, description, link FROM achievements WHERE id = ?',
+        [user.achievements]
+      );
+      achievement = achRows[0] || null;
+    }
+    user.achievement = achievement;
+
+    // --- 4) Lấy danh sách vật phẩm đã mua ---
+    const [itemRows] = await pool.execute(
+      `SELECT i.id, i.name, i.description, i.link, i.require_score, ui.purchased_at
+       FROM user_items ui
+       JOIN items i ON ui.item_id = i.id
+       WHERE ui.user_id = ?`,
+      [user.id]
+    );
+    user.itemsOwned = itemRows; // thêm mảng items vào user object
+
+    // --- 5) Trả về kết quả ---
+    user.week_rank = rank;
+    return res.json(user);
+
+  } catch (err) {
+    console.error('Lỗi khi lấy user:', err);
+    return res.status(500).json({ message: 'Lỗi server khi lấy thông tin người dùng' });
+  }
+});
+
+
+// ==========================
+// API: LEADERBOARD
+// ==========================
+app.get("/api/leaderboard/all", async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT username, fullname, score FROM users ORDER BY score DESC LIMIT 10"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Lỗi leaderboard all:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+app.get("/api/leaderboard/week", async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT username, fullname, week_score FROM users ORDER BY week_score DESC LIMIT 10"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Lỗi leaderboard week:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+
+// GET /api/items
+app.get('/api/items', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM items');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/buy
+app.post('/api/buy', async (req, res) => {
+  const { userId, itemId } = req.body;
+
+  try {
+    // Lấy thông tin vật phẩm
+    const [itemRows] = await pool.query('SELECT require_score FROM items WHERE id = ?', [itemId]);
+    if (itemRows.length === 0) return res.status(404).json({ error: 'Item not found' });
+
+    const requireScore = itemRows[0].require_score;
+
+    // Lấy điểm hiện tại của user
+    const [userRows] = await pool.query('SELECT score FROM users WHERE id = ?', [userId]);
+    if (userRows.length === 0) return res.status(404).json({ error: 'User not found' });
+
+    const currentScore = userRows[0].score;
+
+    if (currentScore < requireScore) {
+      return res.status(400).json({ error: 'Không đủ điểm để mua vật phẩm này' });
+    }
+
+    // Trừ điểm
+    await pool.query('UPDATE users SET score = score - ? WHERE id = ?', [requireScore, userId]);
+
+    // Ghi vào bảng user_items
+    await pool.query('INSERT INTO user_items (user_id, item_id) VALUES (?, ?)', [userId, itemId]);
+
+    res.json({ success: true, message: 'Mua vật phẩm thành công!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// GET /api/my-items/:userId
+app.get('/api/my-items/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [rows] = await pool.query(
+      `SELECT items.* FROM items
+       JOIN user_items ON items.id = user_items.item_id
+       WHERE user_items.user_id = ?`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 

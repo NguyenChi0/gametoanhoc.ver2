@@ -3,13 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const navigate = useNavigate();
-
-  // Lấy user object từ localStorage
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    localStorage.removeItem("token"); // giữ nếu sau này có token
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -24,9 +22,26 @@ export default function Navbar() {
         color: "#fff",
       }}
     >
-      <Link to="/" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
-        🧮 Trang chủ
-      </Link>
+      <div>
+        <Link
+          to="/"
+          style={{
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: "bold",
+            marginRight: 15,
+          }}
+        >
+          🧮 Trang chủ
+        </Link>
+
+        {/* 👇 Thêm link Cửa hàng ở đây */}
+        {user && (
+          <Link to="/shop" style={styles.link}>
+            🛍️ Cửa hàng
+          </Link>
+        )}
+      </div>
 
       <div>
         {!user ? (
@@ -40,7 +55,12 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <span style={{ marginRight: 10 }}>Xin chào, {user.username}!</span>
+            <Link to="/profile" style={styles.link}>
+              Trang cá nhân
+            </Link>
+            <span style={{ marginRight: 10, marginLeft: 30 }}>
+              Xin chào, {user.username}!
+            </span>
             <button onClick={handleLogout} style={styles.logoutBtn}>
               Đăng xuất
             </button>
