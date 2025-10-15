@@ -74,7 +74,7 @@ export default function GamePage() {
   };
 
   return (
-    <div style={{ maxWidth: 980, margin: "24px auto", padding: 16 }}>
+    <div style={{ maxWidth: 980, margin: "5px auto", padding: 16 }}>
       {!payload && message && <div style={{ color: "#666" }}>{message}</div>}
       {!payload && !message && <div>Đang chuẩn bị dữ liệu...</div>}
       {payload && (
