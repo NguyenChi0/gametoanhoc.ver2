@@ -123,7 +123,7 @@ export default function Game1({ payload }) {
           background: "rgba(0, 31, 63, 0.9)",
           padding: "40px 30px",
           borderRadius: 15,
-          maxWidth: 500,
+          maxWidth: 400,
           border: "3px solid #FFD700"
         }}>
           <h2 style={{
@@ -324,7 +324,7 @@ export default function Game1({ payload }) {
               )}
 
               {/* Text câu hỏi */}
-              <div>{currentQuestion.question_text}</div>
+              <div style={{color:"white"}}>{currentQuestion.question_text}</div>
             </div>
           </div>
 

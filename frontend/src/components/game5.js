@@ -162,7 +162,7 @@ export default function Game1({ payload }) {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <h2 style={{ textAlign: "center", marginBottom: 10 }}>🎯 Trò chơi: Ai nói thật?</h2>
+      <h2 style={{ textAlign: "center", marginBottom: 10 }}>Hãy giúp chú cảnh sát tìm ra người không phải thủ phạm</h2>
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         Câu {currentQuestionIndex + 1}{" "}
         {userScore !== null && (

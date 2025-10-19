@@ -1,8 +1,11 @@
 // src/components/ChooseLesson.jsx
 import React, { useState, useEffect } from "react";
-
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000";
-const SESSION_KEY = "game_play_state_v1";
+import {
+  getGrades,
+  getTypes,
+  getOperations,
+  getQuestions,
+} from "../api"; // 👈 import file api.js
 
 export default function ChooseLesson({ onStartGame }) {
   const [grades, setGrades] = useState([]);
@@ -15,31 +18,17 @@ export default function ChooseLesson({ onStartGame }) {
   const [selectedOperation, setSelectedOperation] = useState("");
   const [selectedGameInterface, setSelectedGameInterface] = useState("game1");
 
-  const [loading, setLoading] = useState(false);
-  const [loadingGrades, setLoadingGrades] = useState(true);
-  const [loadingTypes, setLoadingTypes] = useState(false);
-  const [loadingOps, setLoadingOps] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // --- FETCH DỮ LIỆU ---
+  // --- LẤY DANH SÁCH LỚP ---
   useEffect(() => {
-    let mounted = true;
-    setLoadingGrades(true);
-    fetch(`${API_BASE}/api/grades`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!mounted) return;
-        setGrades(data);
-        setLoadingGrades(false);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setError(err.message);
-        setLoadingGrades(false);
-      });
-    return () => (mounted = false);
+    getGrades()
+      .then(setGrades)
+      .catch((err) => setError(err.message));
   }, []);
 
+  // --- LẤY DẠNG BÀI ---
   useEffect(() => {
     if (!selectedGrade) {
       setTypes([]);
@@ -47,64 +36,44 @@ export default function ChooseLesson({ onStartGame }) {
       setQuestions([]);
       return;
     }
-    let mounted = true;
-    setLoadingTypes(true);
-    fetch(`${API_BASE}/api/types/${selectedGrade}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (mounted) setTypes(data);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingTypes(false));
-    return () => (mounted = false);
+    getTypes(selectedGrade)
+      .then(setTypes)
+      .catch((err) => setError(err.message));
   }, [selectedGrade]);
 
+  // --- LẤY PHÉP TOÁN ---
   useEffect(() => {
     if (!selectedType) {
       setOperations([]);
       setQuestions([]);
       return;
     }
-    let mounted = true;
-    setLoadingOps(true);
-    fetch(`${API_BASE}/api/operations/${selectedType}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (mounted) setOperations(data);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingOps(false));
-    return () => (mounted = false);
+    getOperations(selectedType)
+      .then(setOperations)
+      .catch((err) => setError(err.message));
   }, [selectedType]);
 
+  // --- LẤY CÂU HỎI ---
   useEffect(() => {
-    if (!selectedOperation) {
-      setQuestions([]);
-      return;
-    }
-    let mounted = true;
+    if (!selectedOperation) return;
     setLoading(true);
-    const url = new URL(`${API_BASE}/api/questions`);
-    url.searchParams.append("operation_id", selectedOperation);
-    if (selectedGrade) url.searchParams.append("grade_id", selectedGrade);
-    if (selectedType) url.searchParams.append("type_id", selectedType);
-    fetch(url.toString())
-      .then((r) => r.json())
-      .then((payload) => {
-        if (!mounted) return;
-        setQuestions(payload.data || payload);
-      })
+    getQuestions({
+      grade_id: selectedGrade,
+      type_id: selectedType,
+      operation_id: selectedOperation,
+    })
+      .then((res) => setQuestions(res.data || res))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-    return () => (mounted = false);
   }, [selectedOperation]);
 
-  // --- HÀM BẮT ĐẦU CHƠI ---
-  async function handleStart() {
+  // --- BẮT ĐẦU CHƠI ---
+  const handleStart = () => {
     if (!selectedGrade || !selectedType || !selectedOperation) {
       setError("Vui lòng chọn đủ lớp → dạng bài → phép toán trước khi chơi.");
       return;
     }
+
     const rawUser = localStorage.getItem("user");
     const currentUser = rawUser ? JSON.parse(rawUser) : null;
 
@@ -117,7 +86,7 @@ export default function ChooseLesson({ onStartGame }) {
     };
 
     onStartGame(selectedGameInterface, payload);
-  }
+  };
 
   // --- JSX ---
   return (
@@ -134,34 +103,73 @@ export default function ChooseLesson({ onStartGame }) {
       <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
         <div style={{ flex: 1 }}>
           <label>Chọn lớp</label>
-          <select value={selectedGrade} onChange={(e) => setSelectedGrade(e.target.value)} style={{ width: "100%", padding: 8 }}>
+          <select
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(e.target.value)}
+            style={{ width: "100%", padding: 8 }}
+          >
             <option value="">-- Chọn lớp --</option>
-            {loadingGrades ? <option>Đang tải...</option> : grades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            {grades.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
           </select>
         </div>
+
         <div style={{ flex: 1 }}>
           <label>Chọn dạng bài</label>
-          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} disabled={!selectedGrade || loadingTypes} style={{ width: "100%", padding: 8 }}>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            disabled={!selectedGrade}
+            style={{ width: "100%", padding: 8 }}
+          >
             <option value="">-- Chọn dạng bài --</option>
-            {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {types.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
           </select>
         </div>
+
         <div style={{ flex: 1 }}>
           <label>Chọn phép toán</label>
-          <select value={selectedOperation} onChange={(e) => setSelectedOperation(e.target.value)} disabled={!selectedType || loadingOps} style={{ width: "100%", padding: 8 }}>
+          <select
+            value={selectedOperation}
+            onChange={(e) => setSelectedOperation(e.target.value)}
+            disabled={!selectedType}
+            style={{ width: "100%", padding: 8 }}
+          >
             <option value="">-- Chọn phép toán --</option>
-            {operations.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            {operations.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 18 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          marginBottom: 18,
+        }}
+      >
         <div style={{ flex: 1 }}>
           <label>Chọn giao diện game</label>
-          <select value={selectedGameInterface} onChange={(e) => setSelectedGameInterface(e.target.value)} style={{ width: "100%", padding: 8 }}>
+          <select
+            value={selectedGameInterface}
+            onChange={(e) => setSelectedGameInterface(e.target.value)}
+            style={{ width: "100%", padding: 8 }}
+          >
             {Array.from({ length: 10 }, (_, i) => (
               <option key={i + 1} value={`game${i + 1}`}>
-                Game {i + 1} (giao diện {i + 1})
+                Game {i + 1}
               </option>
             ))}
           </select>

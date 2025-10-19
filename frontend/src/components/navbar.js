@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import MusicPlayer from "./musicplayer"; // 👈 thêm dòng này
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function Navbar() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "10px 20px",
+        padding: "10px 10px",
         background: "#007bff",
         color: "#fff",
       }}
@@ -35,7 +36,6 @@ export default function Navbar() {
           🧮 Trang chủ
         </Link>
 
-        {/* 👇 Thêm link Cửa hàng ở đây */}
         {user && (
           <Link to="/shop" style={styles.link}>
             🛍️ Cửa hàng
@@ -43,7 +43,9 @@ export default function Navbar() {
         )}
       </div>
 
-      <div>
+      {/* 👇 Thêm trình phát nhạc mini vào Navbar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <MusicPlayer /> {/* 🎵 Trình phát nhạc */}
         {!user ? (
           <>
             <Link to="/login" style={styles.link}>
@@ -58,7 +60,7 @@ export default function Navbar() {
             <Link to="/profile" style={styles.link}>
               Trang cá nhân
             </Link>
-            <span style={{ marginRight: 10, marginLeft: 30 }}>
+            <span style={{ marginRight: 5, marginLeft: 15 }}>
               Xin chào, {user.username}!
             </span>
             <button onClick={handleLogout} style={styles.logoutBtn}>
