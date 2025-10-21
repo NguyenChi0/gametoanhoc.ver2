@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game8.jsx
 import React, { useMemo, useState, useEffect } from "react";
 import api from "../api";
 
@@ -267,7 +267,8 @@ export default function Game1({ payload, onReturnHome }) {
 
   // Start Screen styles
   const startScreenStyle = {
-    backgroundImage: "url('/game-images/game8-startgame.png')",
+    backgroundImage: `url(${process.env.PUBLIC_URL}/game-images/game8-startgame.png)`,
+    
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
@@ -319,7 +320,8 @@ export default function Game1({ payload, onReturnHome }) {
 
   // Finish Screen styles
   const finishScreenStyle = {
-    backgroundImage: "url('/game-images/game8-finish.png')",
+    backgroundImage: `url(${process.env.PUBLIC_URL}/game-images/game8-finish.png)`,
+
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
@@ -388,7 +390,7 @@ export default function Game1({ payload, onReturnHome }) {
           <div style={resultContainerStyle}>
             <h2 style={titleStyle}>Cô giáo đang chấm bài bạn vui lòng chờ nhé....</h2>
             <img 
-              src="/game-images/game8-chambai.png" 
+              src={`${process.env.PUBLIC_URL}/game-images/game8-chambai.png`}
               alt="Đang chấm bài" 
               style={checkingImageStyle}
               onError={(e) => {

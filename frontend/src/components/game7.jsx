@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game7.jsx
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import api from "../api";
 
@@ -219,7 +219,7 @@ export default function Game1({ payload }) {
 
         {/* Câu hỏi - Giảm kích thước */}
         <div style={{
-          background: "url('/game-images/game7-platform.png') no-repeat center center",
+          background: `url(${process.env.PUBLIC_URL}/game-images/game7-platform.png) no-repeat center center`,
           backgroundSize: "cover",
           padding: "15px",
           borderRadius: "8px",
@@ -247,7 +247,8 @@ export default function Game1({ payload }) {
   style={{ 
     position: "relative", 
     height: "350px",
-    backgroundImage: "url('/game-images/game7-background.png')", // 🌄 Thay bằng ảnh bạn muốn
+    backgroundImage: `url(${process.env.PUBLIC_URL}/game-images/game7-background.png)`,
+
     backgroundSize: "cover",
     backgroundPosition: "center",
     borderRadius: "12px",
@@ -325,7 +326,7 @@ export default function Game1({ payload }) {
                 >
                   {/* Cánh cửa */}
                   <img
-                    src="/game-images/game7-door.png"
+                    src={`${process.env.PUBLIC_URL}/game-images/game7-door.png`}
                     alt={`Cửa ${index + 1}`}
                     style={{
                       width: "100%",
@@ -388,7 +389,7 @@ export default function Game1({ payload }) {
               zIndex: 2
             }}>
               <img
-                src="/game-images/game7-torch.png"
+                src={`${process.env.PUBLIC_URL}/game-images/game7-torch.png`}
                 alt="Đuốc"
                 style={{
                   width: "200%",
@@ -413,7 +414,7 @@ export default function Game1({ payload }) {
 
             {/* Nhân vật */}
             <img
-              src="/game-images/game7-nv.png"
+              src={`${process.env.PUBLIC_URL}/game-images/game7-nv.png`}
               alt="Nhân vật"
               style={{
                 width: "80px",
@@ -431,7 +432,8 @@ export default function Game1({ payload }) {
             left: "0",
             width: "100%",
             height: "60px",
-            background: "url('/game-images/game7-platform.png') repeat-x",
+            background: `url(${process.env.PUBLIC_URL}/game-images/game7-platform.png) repeat-x`,
+
             backgroundSize: "auto 100%",
             opacity: 0.9
           }}></div>

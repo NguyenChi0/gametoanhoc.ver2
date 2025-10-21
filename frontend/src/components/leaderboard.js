@@ -1,7 +1,7 @@
 // src/pages/leaderboard.js
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../api"; // axios instance, baseURL = http://localhost:5000/api
+import api from "../api"; 
 
 export default function Leaderboard() {
   const [tab, setTab] = useState("all");

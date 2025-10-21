@@ -1,3 +1,4 @@
+//frontend/src/components/game4.js
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import api from "../api";
 
@@ -291,16 +292,17 @@ export default function Game1({ payload }) {
             filter: isJumping ? "drop-shadow(0 12px 8px rgba(0,0,0,0.4))" : "drop-shadow(0 4px 4px rgba(0,0,0,0.2))",
           }}>
             <img 
-              src="/game-images/game4-runner.png"
-              alt="Runner" 
-              style={{ 
-                width: "100%", 
-                height: "100%", 
-                objectFit: "contain",
-                transform: isJumping ? "rotate(-10deg)" : "rotate(0deg)",
-                transition: "transform 0.3s ease"
-              }} 
-            />
+  src={`${process.env.PUBLIC_URL}/game-images/game4-runner.png`}
+  alt="Runner" 
+  style={{ 
+    width: "100%", 
+    height: "100%", 
+    objectFit: "contain",
+    transform: isJumping ? "rotate(-10deg)" : "rotate(0deg)",
+    transition: "transform 0.3s ease"
+  }} 
+/>
+
           </div>
 
           {/* Obstacles - IMAGE */}
@@ -327,16 +329,17 @@ export default function Game1({ payload }) {
                 }}
               >
                 <img 
-                  src="/game-images/game4-barrier.png"
-                  alt="Barrier" 
-                  style={{ 
-                    width: "100%", 
-                    height: "100%", 
-                    objectFit: "cover",
-                    filter: isCrashed ? "hue-rotate(300deg) brightness(1.2)" : "none",
-                    transition: "filter 0.3s ease"
-                  }} 
-                />
+  src={`${process.env.PUBLIC_URL}/game-images/game4-runner.png`}
+  alt="Runner" 
+  style={{ 
+    width: "100%", 
+    height: "100%", 
+    objectFit: "contain",
+    transform: isJumping ? "rotate(-10deg)" : "rotate(0deg)",
+    transition: "transform 0.3s ease"
+  }} 
+/>
+
               </div>
             );
           })}

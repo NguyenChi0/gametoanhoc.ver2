@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game6.jsx
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import api from "../api";
 
@@ -20,11 +20,12 @@ export default function Game1({ payload }) {
 
   // Danh sách ảnh hoa quả
   const fruitImages = [
-    "/game-images/game6-fruit1.png",
-    "/game-images/game6-fruit2.png", 
-    "/game-images/game6-fruit3.png",
-    "/game-images/game6-fruit4.png"
-  ];
+  `${process.env.PUBLIC_URL}/game-images/game6-fruit1.png`,
+  `${process.env.PUBLIC_URL}/game-images/game6-fruit2.png`,
+  `${process.env.PUBLIC_URL}/game-images/game6-fruit3.png`,
+  `${process.env.PUBLIC_URL}/game-images/game6-fruit4.png`
+];
+
 
   // Shuffle câu trả lời
   const qs = useMemo(() => {
@@ -56,11 +57,11 @@ export default function Game1({ payload }) {
         let newSpeed = fruit.speed;
         
         // Đổi hướng khi chạm biên
-        if (newY <= 50) {
-          newY = 50;
+        if (newY <= 35) {
+          newY = 35;
           newSpeed = Math.abs(fruit.speed); // Đi xuống
-        } else if (newY >= 450) {
-          newY = 450;
+        } else if (newY >= 320) {
+          newY = 320;
           newSpeed = -Math.abs(fruit.speed); // Đi lên
         }
 
@@ -378,8 +379,9 @@ export default function Game1({ payload }) {
             onMouseLeave={handleMouseUp}
             style={{
               position: "relative",
-              height: "600px",
-              background: "url(/game-images/game6-background.png) no-repeat center center",
+              height: "400px",
+              background: `url(${process.env.PUBLIC_URL}/game-images/game6-background.png) no-repeat center center`,
+
               backgroundSize: "cover",
               borderRadius: "15px",
               overflow: "hidden",

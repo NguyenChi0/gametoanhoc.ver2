@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game9.jsx
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import api from "../api";
 
@@ -183,19 +183,19 @@ function RabbitGame({ question, onAnswerSelected, isAnswered, isCorrect }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
 
   useEffect(() => {
-    // Load images
-    const rabbitImg = new Image();
-    rabbitImg.src = '/game-images/game9-rabbit.png';
-    rabbitImg.onload = () => setRabbitImage(rabbitImg);
+  // Load images
+  const rabbitImg = new Image();
+  rabbitImg.src = `${process.env.PUBLIC_URL}/game-images/game9-rabbit.png`;
+  rabbitImg.onload = () => setRabbitImage(rabbitImg);
 
-    const houseImg = new Image();
-    houseImg.src = '/game-images/game9-hang.png';
-    houseImg.onload = () => setHouseImage(houseImg);
+  const houseImg = new Image();
+  houseImg.src = `${process.env.PUBLIC_URL}/game-images/game9-hang.png`;
+  houseImg.onload = () => setHouseImage(houseImg);
 
-    const bgImg = new Image();
-    bgImg.src = '/game-images/game9-background.png';
-    bgImg.onload = () => setBackgroundImage(bgImg);
-  }, []);
+  const bgImg = new Image();
+  bgImg.src = `${process.env.PUBLIC_URL}/game-images/game9-background.png`;
+  bgImg.onload = () => setBackgroundImage(bgImg);
+}, []);
 
   const houses = [
     { id: 0, x: 100, y: 100, answer: question.answers[0] },

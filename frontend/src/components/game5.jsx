@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game5.jsx
 import React, { useMemo, useState, useEffect } from "react";
 import api from "../api";
 
@@ -185,7 +185,8 @@ export default function Game1({ payload }) {
         <div
           style={{
             backgroundColor: "#1e90ff",
-            backgroundImage: "url('/game-images/game5-police.png')",
+            backgroundImage: `url(${process.env.PUBLIC_URL}/game-images/game5-police.png)`,
+
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -231,7 +232,7 @@ export default function Game1({ payload }) {
         {/* Tên cướp */}
         <div
           style={{
-            display: "flex",
+            display: "flex",  
             flexWrap: "wrap",
             gap: 25,
             justifyContent: "center",
@@ -241,11 +242,13 @@ export default function Game1({ payload }) {
             // Xác định màu nền và ảnh nền
             let backgroundColor = "#ff4d4d";
             let border = "3px solid #a30000";
-            let backgroundImage = "url('/game-images/game5-crime.png')";
+            let backgroundImage = `url(${process.env.PUBLIC_URL}/game-images/game5-crime.png)`;
+
 
             // Nếu đang hiển thị câu trả lời đúng và đây là câu đúng
             if (showCorrectAnswer && correctAnswerIndex === ai) {
-              backgroundImage = "url('/game-images/game5-notcrime.png')";
+              backgroundImage = `url(${process.env.PUBLIC_URL}/game-images/game5-notcrime.png)`;
+
               backgroundColor = "rgba(76, 175, 80, 0.7)"; // Xanh với độ trong suốt
               border = "3px solid #2e7d32";
             } else if (sel !== undefined) {

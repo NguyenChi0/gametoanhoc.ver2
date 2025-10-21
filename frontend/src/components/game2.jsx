@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game2.jsx
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import api from "../api";
 
@@ -16,15 +16,12 @@ export default function Game1({ payload }) {
 
   const getImageSrc = (imgPath) => {
   if (!imgPath) return null;
-  // Link full URL
   if (/^https?:\/\//i.test(imgPath)) return imgPath;
-  // Đường dẫn bắt đầu với / là public path
   if (imgPath.startsWith("/")) return imgPath;
-  // Đường dẫn chỉ kiểu game-images/file.png
-  if (imgPath.startsWith("game-images/")) return `/${imgPath}`;
-  // Mặc định lấy từ public/game-images
-  return `/game-images/${imgPath}`;
+  if (imgPath.startsWith("game-images/")) return `${process.env.PUBLIC_URL}/${imgPath}`;
+  return `${process.env.PUBLIC_URL}/game-images/${imgPath}`;
 };
+
 
 
   // Shuffle câu trả lời

@@ -285,10 +285,11 @@ export default function Game3({ payload }) {
               }}
             >
               <img 
-                src="/game-images/game3-dart.png" 
-                alt="Phi tiêu" 
-                style={styles.dartImage}
-              />
+  src={`${process.env.PUBLIC_URL}/game-images/game3-dart.png`} 
+  alt="Phi tiêu" 
+  style={styles.dartImage}
+/>
+
             </div>
           )}
         </div>
