@@ -44,7 +44,7 @@ export default function Navbar() {
       </div>
 
       {/* 👇 Thêm trình phát nhạc mini vào Navbar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <MusicPlayer /> {/* 🎵 Trình phát nhạc */}
         {!user ? (
           <>
@@ -60,8 +60,8 @@ export default function Navbar() {
             <Link to="/profile" style={styles.link}>
               Trang cá nhân
             </Link>
-            <span style={{ marginRight: 5, marginLeft: 15 }}>
-              Xin chào, {user.username}!
+            <span style={{ marginRight: 5, marginLeft: 5 }}>
+              Hi, {user.username}!
             </span>
             <button onClick={handleLogout} style={styles.logoutBtn}>
               Đăng xuất

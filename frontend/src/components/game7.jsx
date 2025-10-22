@@ -207,7 +207,7 @@ export default function Game1({ payload }) {
             textShadow: "0 0 10px rgba(255,215,0,0.5)",
             fontSize: "18px"
           }}>
-            🏰 Cuộc Phiêu Lưu Toán Học
+            🏰 Thoát khỏi hầm mộ
           </h3>
           {userScore !== null && (
             <div style={{ fontSize: "14px" }}>
@@ -234,7 +234,7 @@ export default function Game1({ payload }) {
             margin: 0, 
             color: "#fff",
             textAlign: "center",
-            fontSize: "16px",
+            fontSize: "30px",
             textShadow: "1px 1px 2px rgba(0,0,0,0.8)"
           }}>
             Câu {currentQuestionIndex + 1}: {currentQuestion.question_text}

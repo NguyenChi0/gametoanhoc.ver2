@@ -10,6 +10,16 @@ export default function Game1({ payload }) {
   const [weekScore, setWeekScore] = useState(payload?.user?.week_score ?? 0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+  // Refs for audio
+  const correctSoundRef = useRef(null);
+  const wrongSoundRef = useRef(null);
+
+  // Initialize audio
+  useEffect(() => {
+    correctSoundRef.current = new Audio(`${process.env.PUBLIC_URL}/game-noises/dung.mp3`);
+    wrongSoundRef.current = new Audio(`${process.env.PUBLIC_URL}/game-noises/sai.mp3`);
+  }, []);
+
   // Shuffle câu trả lời
   const qs = useMemo(() => {
     function shuffle(arr) {
@@ -42,6 +52,13 @@ export default function Game1({ payload }) {
   function handleAnswerSelected(qId, isCorrect) {
     if (selected[qId] !== undefined) return;
 
+    // Phát âm thanh
+    if (isCorrect) {
+      correctSoundRef.current.play().catch(e => console.warn("Lỗi phát âm thanh:", e));
+    } else {
+      wrongSoundRef.current.play().catch(e => console.warn("Lỗi phát âm thanh:", e));
+    }
+
     setSelected((prev) => ({ ...prev, [qId]: isCorrect }));
 
     if (isCorrect) {
@@ -49,29 +66,29 @@ export default function Game1({ payload }) {
         payload?.user?.id ||
         (localStorage.getItem("user") && JSON.parse(localStorage.getItem("user")).id);
 
-      if (!userId) {
-        console.warn("Người dùng chưa login — không thể cộng điểm trên server.");
-        return;
-      }
+      // Chỉ gọi API nếu có userId (đã login)
+      if (userId) {
+        incrementScoreOnServer(userId, 1).then((data) => {
+          if (data && data.success) {
+            setUserScore(data.score);
+            setWeekScore(data.week_score ?? 0);
 
-      incrementScoreOnServer(userId, 1).then((data) => {
-        if (data && data.success) {
-          setUserScore(data.score);
-          setWeekScore(data.week_score ?? 0);
-
-          const raw = localStorage.getItem("user");
-          if (raw) {
-            try {
-              const u = JSON.parse(raw);
-              u.score = data.score;
-              u.week_score = data.week_score;
-              localStorage.setItem("user", JSON.stringify(u));
-            } catch (err) {
-              console.warn("Không cập nhật được user trong localStorage:", err);
+            const raw = localStorage.getItem("user");
+            if (raw) {
+              try {
+                const u = JSON.parse(raw);
+                u.score = data.score;
+                u.week_score = data.week_score;
+                localStorage.setItem("user", JSON.stringify(u));
+              } catch (err) {
+                console.warn("Không cập nhật được user trong localStorage:", err);
+              }
             }
           }
-        }
-      });
+        });
+      } else {
+        console.log("Người dùng chưa login - không cộng điểm nhưng vẫn có thể chơi tiếp");
+      }
     }
 
     // Chuyển câu hỏi sau 2 giây
@@ -157,7 +174,7 @@ export default function Game1({ payload }) {
         alignItems: 'center'
       }}>
         <RabbitGame 
-          key={currentQuestion.id} // Thêm key để reset component khi câu hỏi thay đổi
+          key={currentQuestion.id}
           question={currentQuestion}
           onAnswerSelected={(isCorrect) => handleAnswerSelected(currentQuestion.id, isCorrect)}
           isAnswered={selected[currentQuestion.id] !== undefined}
@@ -183,19 +200,19 @@ function RabbitGame({ question, onAnswerSelected, isAnswered, isCorrect }) {
   const [backgroundImage, setBackgroundImage] = useState(null);
 
   useEffect(() => {
-  // Load images
-  const rabbitImg = new Image();
-  rabbitImg.src = `${process.env.PUBLIC_URL}/game-images/game9-rabbit.png`;
-  rabbitImg.onload = () => setRabbitImage(rabbitImg);
+    // Load images
+    const rabbitImg = new Image();
+    rabbitImg.src = `${process.env.PUBLIC_URL}/game-images/game9-rabbit.png`;
+    rabbitImg.onload = () => setRabbitImage(rabbitImg);
 
-  const houseImg = new Image();
-  houseImg.src = `${process.env.PUBLIC_URL}/game-images/game9-hang.png`;
-  houseImg.onload = () => setHouseImage(houseImg);
+    const houseImg = new Image();
+    houseImg.src = `${process.env.PUBLIC_URL}/game-images/game9-hang.png`;
+    houseImg.onload = () => setHouseImage(houseImg);
 
-  const bgImg = new Image();
-  bgImg.src = `${process.env.PUBLIC_URL}/game-images/game9-background.png`;
-  bgImg.onload = () => setBackgroundImage(bgImg);
-}, []);
+    const bgImg = new Image();
+    bgImg.src = `${process.env.PUBLIC_URL}/game-images/game9-background.png`;
+    bgImg.onload = () => setBackgroundImage(bgImg);
+  }, []);
 
   const houses = [
     { id: 0, x: 100, y: 100, answer: question.answers[0] },

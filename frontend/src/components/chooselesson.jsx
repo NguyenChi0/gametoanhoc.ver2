@@ -1,4 +1,4 @@
-// src/components/ChooseLesson.jsx
+// src/components/chooselesson.jsx
 import React, { useState, useEffect } from "react";
 import {
   getGrades,

@@ -40,7 +40,7 @@ export default function Profile() {
         {userData.achievement ? (
           <div>
             <div style={{ fontWeight: 600 }}>{userData.achievement.name}</div>
-            {userData.week_rank ? <div style={{ fontStyle: "italic" }}>Hạng tuần: #{userData.week_rank}</div> : null}
+            
             {userData.achievement.description ? <div>{userData.achievement.description}</div> : null}
             {userData.achievement.link ? (
               <div style={{ marginTop: 8 }}>

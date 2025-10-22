@@ -1,7 +1,7 @@
-// src/pages/Home.jsx
+// src/pages/home.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Leaderboard from "../components/leaderboard";
+//(Xóa comment để import leaderboard)  import Leaderboard from "../components/leaderboard"; 
 import ChooseLesson from "../components/chooselesson";
 
 const SESSION_KEY = "game_play_state_v1";
@@ -31,7 +31,7 @@ export default function Home() {
       <ChooseLesson onStartGame={handleStartGame} />
 
       {/* 🏆 Bảng xếp hạng */}
-      <Leaderboard />
+      {/* Bỏ cmt để lại phần :     <Leaderboard />     để chạy */}
     </div>
   );
 }

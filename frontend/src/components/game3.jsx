@@ -52,72 +52,77 @@ export default function Game3({ payload }) {
     
     return segmentCenters[segmentIndex];
   };
+function handleDartThrow(qId, ansIdx) {
+  if (selected[qId] !== undefined || gameOver) return;
 
-  function handleDartThrow(qId, ansIdx) {
-    if (selected[qId] !== undefined || gameOver) return;
+  // Phát âm thanh ném phi tiêu
+  const dartSound = new Audio(`${process.env.PUBLIC_URL}/game-noises/dart.mp3`);
+  dartSound.volume = 0.6; // âm lượng (0.0 - 1.0)
+  dartSound.play().catch((err) => console.warn("Không phát được âm thanh:", err));
 
-    const q = qs.find((x) => x.id === qId);
-    const a = q?.answers?.[ansIdx];
-    
-    setSelected((prev) => ({ ...prev, [qId]: ansIdx }));
+  const q = qs.find((x) => x.id === qId);
+  const a = q?.answers?.[ansIdx];
+  
+  setSelected((prev) => ({ ...prev, [qId]: ansIdx }));
 
-    // Tính toán vị trí đích cho phi tiêu
-    const targetPosition = getDartTargetPosition(ansIdx);
-    
-    // Hiệu ứng phi tiêu bay
-    setDartPosition({
-      x: targetPosition.x,
-      y: targetPosition.y,
-      visible: true,
-      segmentIndex: ansIdx
-    });
+  // Tính toán vị trí đích cho phi tiêu
+  const targetPosition = getDartTargetPosition(ansIdx);
+  
+  // Hiệu ứng phi tiêu bay
+  setDartPosition({
+    x: targetPosition.x,
+    y: targetPosition.y,
+    visible: true,
+    segmentIndex: ansIdx
+  });
 
-    if (a && a.correct) {
-      const userId = payload?.user?.id ||
-        (localStorage.getItem("user") && JSON.parse(localStorage.getItem("user")).id);
+  if (a && a.correct) {
+    const userId = payload?.user?.id ||
+      (localStorage.getItem("user") && JSON.parse(localStorage.getItem("user")).id);
 
-      if (!userId) {
-        console.warn("Người dùng chưa login — không thể cộng điểm trên server.");
-      } else {
-        incrementScoreOnServer(userId, 1).then((data) => {
-          if (data && data.success) {
-            setUserScore(data.score);
-            setWeekScore(data.week_score ?? 0);
+    if (!userId) {
+      console.warn("Người dùng chưa login — không thể cộng điểm trên server.");
+    } else {
+      incrementScoreOnServer(userId, 1).then((data) => {
+        if (data && data.success) {
+          setUserScore(data.score);
+          setWeekScore(data.week_score ?? 0);
 
-            const raw = localStorage.getItem("user");
-            if (raw) {
-              try {
-                const u = JSON.parse(raw);
-                u.score = data.score;
-                u.week_score = data.week_score;
-                localStorage.setItem("user", JSON.stringify(u));
-              } catch (err) {
-                console.warn("Không cập nhật được user trong localStorage:", err);
-              }
+          const raw = localStorage.getItem("user");
+          if (raw) {
+            try {
+              const u = JSON.parse(raw);
+              u.score = data.score;
+              u.week_score = data.week_score;
+              localStorage.setItem("user", JSON.stringify(u));
+            } catch (err) {
+              console.warn("Không cập nhật được user trong localStorage:", err);
             }
           }
-        });
-      }
-
-      setTimeout(() => {
-        // Ẩn phi tiêu trước khi chuyển câu
-        setDartPosition({ x: 0, y: 0, visible: false, segmentIndex: null });
-        
-        if (currentQuestionIndex < qs.length - 1) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-          setSelected({});
-        } else {
-          setGameWon(true);
         }
-      }, 1500);
-    } else {
-      setTimeout(() => {
-        // Ẩn phi tiêu trước khi kết thúc game
-        setDartPosition({ x: 0, y: 0, visible: false, segmentIndex: null });
-        setGameOver(true);
-      }, 1500);
+      });
     }
+
+    setTimeout(() => {
+      // Ẩn phi tiêu trước khi chuyển câu
+      setDartPosition({ x: 0, y: 0, visible: false, segmentIndex: null });
+      
+      if (currentQuestionIndex < qs.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setSelected({});
+      } else {
+        setGameWon(true);
+      }
+    }, 1500);
+  } else {
+    setTimeout(() => {
+      // Ẩn phi tiêu trước khi kết thúc game
+      setDartPosition({ x: 0, y: 0, visible: false, segmentIndex: null });
+      setGameOver(true);
+    }, 1500);
   }
+}
+
 
   function resetGame() {
     setCurrentQuestionIndex(0);
@@ -334,7 +339,7 @@ const styles = {
     marginBottom: "30px",
   },
   questionText: {
-    fontSize: "18px",
+    fontSize: "40px",
     fontWeight: "bold",
     marginBottom: "15px",
   },
@@ -408,7 +413,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    transform: "rotate(45deg)",
+ 
     left: "30px",
     top: "30px",
   },
@@ -416,7 +421,7 @@ const styles = {
     fontWeight: "bold",
     color: "white",
     textShadow: "1px 1px 3px rgba(0, 0, 0, 0.8)",
-    fontSize: "14px",
+    fontSize: "35px",
     transform: "rotate(-45deg)",
   },
   answerImage: {
@@ -433,8 +438,8 @@ const styles = {
   },
   dart: {
     position: "absolute",
-    width: "60px",
-    height: "60px",
+    width: "100px",
+    height: "100px",
     transform: "translate(-50%, -50%)",
     zIndex: 100,
     animation: "flyInFromCorner 0.8s ease-out forwards",

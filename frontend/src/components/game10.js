@@ -1,4 +1,4 @@
-// src/components/games/Game1.jsx
+// src/components/games/game10.jsx
 import React, { useMemo, useState } from "react";
 import api from "../api";
 

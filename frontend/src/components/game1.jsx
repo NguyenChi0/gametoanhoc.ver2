@@ -23,52 +23,66 @@ export default function Game1({ payload }) {
   const currentQuestion = gameQuestions[current];
 
   async function incrementScore(userId, delta = 1) {
-    try {
-      const res = await api.post("/score/increment", { userId, delta });
-      if (res.data.success) {
-        setUserScore(res.data.score);
-        setWeekScore(res.data.week_score);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...user,
-            score: res.data.score,
-            week_score: res.data.week_score,
-          })
-        );
-      }
-    } catch (err) {
-      console.error("API cộng điểm lỗi:", err);
+  try {
+    const res = await api.post("/score/increment", { userId, delta });
+    if (res.data?.success) {
+      setUserScore(res.data.score);
+      setWeekScore(res.data.week_score);
+
+      // Lấy user hiện tại từ localStorage (an toàn nếu undefined)
+      const raw = localStorage.getItem("user");
+      const existing = raw ? JSON.parse(raw) : (user ? { ...user } : {});
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...existing,
+          score: res.data.score,
+          week_score: res.data.week_score,
+        })
+      );
     }
+  } catch (err) {
+    console.error("API cộng điểm lỗi:", err);
   }
+}
 
-  function handleAnswer(answer) {
-    if (locked) return;
-    setLocked(true);
-    setSelected(answer);
+function handleAnswer(answer) {
+  if (locked) return;
+  setLocked(true);
+  setSelected(answer);
 
-    if (answer.correct && user?.id) {
-      setBackground("game1-winner.png");
+  const isCorrect = !!answer.correct;
+  const isLast = current + 1 >= gameQuestions.length;
+
+  if (isCorrect) {
+    setBackground("game1-winner.png");
+
+    // Chỉ gọi API nếu có user.id, nhưng vẫn xử lý là trả lời đúng dù không login
+    if (user?.id) {
       incrementScore(user.id, 1);
-      setTimeout(() => {
-        if (current + 1 < gameQuestions.length) {
-          setCurrent((c) => c + 1);
-          setSelected(null);
-          setLocked(false);
-          setBackground("game1-asker.png");
-        } else {
-          setShowResult(true);
-          setBackground("game1-winner.png");
-        }
-      }, 1500);
-    } else {
-      setBackground("game1-loser.png");
-      setTimeout(() => {
-        setGameOver(true);
-        setShowResult(true);
-      }, 1500);
     }
+
+    setTimeout(() => {
+      if (!isLast) {
+        // dùng functional update để an toàn
+        setCurrent((c) => c + 1);
+        setSelected(null);
+        setLocked(false);
+        setBackground("game1-asker.png");
+      } else {
+        setShowResult(true);
+        setBackground("game1-winner.png");
+      }
+    }, 1500);
+  } else {
+    setBackground("game1-loser.png");
+    setTimeout(() => {
+      setGameOver(true);
+      setShowResult(true);
+      // không cần unlock vì game over
+    }, 1500);
   }
+}
 
   function resetGame() {
     setCurrent(0);
@@ -98,7 +112,7 @@ export default function Game1({ payload }) {
   // Background toàn màn hình - giữ nguyên
   const backgroundStyle = {
     minHeight: "20vh",
-    backgroundColor: "#001f3f",
+    backgroundColor: "#97b4d1ff",
     display: "flex",
     alignItems: "center", // Căn giữa theo chiều dọc
     padding: "20px 0" // Giảm padding để khung ngắn hơn
@@ -120,7 +134,7 @@ export default function Game1({ payload }) {
     return (
       <div style={resultBackgroundStyle}>
         <div style={{
-          background: "rgba(0, 31, 63, 0.9)",
+          background: "rgba(78, 150, 221, 0.9)",
           padding: "40px 30px",
           borderRadius: 15,
           maxWidth: 400,
@@ -224,7 +238,7 @@ export default function Game1({ payload }) {
         {/* Cột trái - Giảm chiều cao */}
         <div style={{
           width: 250,
-          background: "linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 51, 102, 0.9))",
+          background: "linear-gradient(135deg, rgba(201, 100, 105, 0.95), rgba(172, 82, 134, 0.9))",
           color: "white",
           padding: 15, // Giảm padding
           borderRadius: 12,
@@ -243,7 +257,7 @@ export default function Game1({ payload }) {
                 ? "linear-gradient(135deg, #FFD700, #FFA000)"
                 : index < current
                   ? "linear-gradient(135deg, #4CAF50, #45a049)"
-                  : "linear-gradient(135deg, rgba(0, 51, 102, 0.8), rgba(0, 34, 68, 0.8))",
+                  : "linear-gradient(135deg, rgba(38, 138, 238, 0.8), rgba(17, 84, 151, 0.8))",
               color: index === current ? "black" : "white",
               padding: "8px 10px", // Giảm padding
               borderRadius: 6,
@@ -259,7 +273,7 @@ export default function Game1({ payload }) {
         {/* Cột phải - Giảm chiều cao tổng thể */}
         <div style={{
           flex: 1,
-          background: "linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 51, 102, 0.9))",
+          background: "linear-gradient(135deg, rgba(250, 165, 149, 0.9), rgba(216, 77, 77, 0.9))",
           color: "white",
           padding: 20, // Giảm padding
           borderRadius: 12,
@@ -268,7 +282,7 @@ export default function Game1({ payload }) {
         }}>
           {/* Ô hiển thị câu hỏi - GIỮ NGUYÊN KÍCH THƯỚC và LÀM BACKGROUND RÕ NÉT */}
           <div style={{
-            fontSize: 22,
+            fontSize: 30,
             fontWeight: 600,
             backgroundImage: `url(${process.env.PUBLIC_URL || ""}/game-images/${background})`,
             backgroundRepeat: "no-repeat",
@@ -324,7 +338,7 @@ export default function Game1({ payload }) {
               )}
 
               {/* Text câu hỏi */}
-              <div style={{color:"white"}}>{currentQuestion.question_text}</div>
+              <div style={{color:"white",marginTop:"-80px",marginLeft:"50px",marginRight:"55px"}}>{currentQuestion.question_text}</div>
             </div>
           </div>
 
@@ -336,7 +350,7 @@ export default function Game1({ payload }) {
           }}>
             {currentQuestion.answers.map((ans, i) => {
               const chosen = selected === ans;
-              let bg = "linear-gradient(135deg, rgba(0, 51, 102, 0.8), rgba(0, 34, 68, 0.8))";
+              let bg = "linear-gradient(135deg, rgba(54, 150, 230, 0.8), rgba(24, 122, 221, 0.8))";
               let borderColor = "#1e88e5";
               if (selected) {
                 if (chosen && ans.correct) {
@@ -350,7 +364,7 @@ export default function Game1({ payload }) {
                   borderColor = "#4CAF50";
                 } else {
                   bg = "linear-gradient(135deg, rgba(44, 62, 80, 0.8), rgba(52, 73, 94, 0.8))";
-                  borderColor = "#2c3e50";
+                  borderColor = "#7aacdfff";
                 }
               }
 

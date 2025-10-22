@@ -17,6 +17,8 @@ export default function Game1({ payload }) {
   const [isJumping, setIsJumping] = useState(false);
   const animationRef = useRef();
   const hasScoredRef = useRef(false);
+  const jumpSoundRef = useRef(null);
+
   const gameSpeed = 0.65;
 
   // Shuffle câu trả lời
@@ -51,6 +53,12 @@ export default function Game1({ payload }) {
     hasScoredRef.current = false;
   }, [currentQuestion]);
 
+
+  useEffect(() => {
+  jumpSoundRef.current = new Audio(`${process.env.PUBLIC_URL}/game-noises/jump.mp3`);
+}, []);
+
+
   // Animation loop
   useEffect(() => {
     if (gameState !== "running") return;
@@ -69,6 +77,11 @@ export default function Game1({ payload }) {
             if (!isJumping && !hasScoredRef.current) {
               hasScoredRef.current = true;
               setIsJumping(true);
+              if (jumpSoundRef.current) {
+  jumpSoundRef.current.currentTime = 0; // reset để phát lại từ đầu
+  jumpSoundRef.current.play().catch(() => {});
+}
+
 
               // Lưu câu trả lời đã chọn
               setSelected(prev => ({ ...prev, [currentQ.id]: playerLane }));
@@ -329,13 +342,13 @@ export default function Game1({ payload }) {
                 }}
               >
                 <img 
-  src={`${process.env.PUBLIC_URL}/game-images/game4-runner.png`}
+  src={`${process.env.PUBLIC_URL}/game-images/game4-barrier.png`}
   alt="Runner" 
   style={{ 
     width: "100%", 
     height: "100%", 
     objectFit: "contain",
-    transform: isJumping ? "rotate(-10deg)" : "rotate(0deg)",
+    transform: isJumping ? "rotate(0deg)" : "rotate(0deg)",
     transition: "transform 0.3s ease"
   }} 
 />

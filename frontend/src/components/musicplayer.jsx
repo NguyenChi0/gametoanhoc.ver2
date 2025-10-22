@@ -1,4 +1,4 @@
-// src/components/MusicPlayer.jsx
+// src/components/musicplayer.jsx
 import React, { useEffect, useState, useRef } from "react";
 import api, { getMusicList } from "../api";
 

@@ -1,4 +1,4 @@
-// pages/GamePage.jsx
+// pages/gamepage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import Game1 from "../components/game1";

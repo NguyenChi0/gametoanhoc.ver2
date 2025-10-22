@@ -17,6 +17,7 @@ export default function Game1({ payload }) {
   const [slicePath, setSlicePath] = useState([]);
   const gameContainerRef = useRef(null);
   const animationRef = useRef(null);
+  
 
   // Danh sách ảnh hoa quả
   const fruitImages = [
@@ -45,6 +46,15 @@ export default function Game1({ payload }) {
 
   const currentQuestion = qs[currentQuestionIndex];
 
+  const chopSound = useRef(null);
+
+    useEffect(() => {
+      chopSound.current = new Audio("/game-noises/chem.mp3");
+      chopSound.current.volume = 0.8; // âm lượng 80%
+      chopSound.current.load();
+    }, []);
+
+
   // Game loop - cập nhật vị trí quả
   useEffect(() => {
     if (!gameActive) return;
@@ -60,8 +70,8 @@ export default function Game1({ payload }) {
         if (newY <= 35) {
           newY = 35;
           newSpeed = Math.abs(fruit.speed); // Đi xuống
-        } else if (newY >= 320) {
-          newY = 320;
+        } else if (newY >= 420) {
+          newY = 420;
           newSpeed = -Math.abs(fruit.speed); // Đi lên
         }
 
@@ -212,64 +222,73 @@ export default function Game1({ payload }) {
   }
 
   // Xử lý khi chém trúng quả
-  function handleFruitHit(fruitId) {
-    const fruit = fruits.find(f => f.id === fruitId);
-    if (!fruit || fruit.hit) return;
+ function handleFruitHit(fruitId) {
+  const fruit = fruits.find(f => f.id === fruitId);
+  if (!fruit || fruit.hit) return;
 
-    // Đánh dấu quả đã bị chém
-    setFruits(prev => prev.map(f => 
-      f.id === fruitId ? { ...f, hit: true, sliced: true } : f
-    ));
+  // Đánh dấu quả đã bị chém
+  setFruits(prev => prev.map(f => 
+    f.id === fruitId ? { ...f, hit: true, sliced: true } : f
+  ));
 
-    const isCorrect = fruit.answer.correct;
+  const isCorrect = fruit.answer.correct;
 
-    if (isCorrect) {
-      // Chém đúng
-      setScore(prev => prev + 1);
-      setMessage("Chém đúng! +1 điểm");
+  if (isCorrect) {
+    // 🔊 Phát âm thanh chém
+    const chopSound = new Audio("/game-noises/chem.mp3");
+    chopSound.currentTime = 0;
+    chopSound.volume = 0.8; // âm lượng vừa phải
+    chopSound.play().catch(err => console.warn("Không phát được âm thanh:", err));
 
-      // Cộng điểm thật
-      const userId = payload?.user?.id ||
-        (localStorage.getItem("user") && JSON.parse(localStorage.getItem("user")).id);
+    // Chém đúng
+    setScore(prev => prev + 1);
+    setMessage("Chém đúng! +1 điểm");
 
-      if (userId) {
-        incrementScoreOnServer(userId, 1).then((data) => {
-          if (data && data.success) {
-            setUserScore(data.score);
-            setWeekScore(data.week_score ?? 0);
+    // Cộng điểm thật
+    const userId =
+      payload?.user?.id ||
+      (localStorage.getItem("user") &&
+        JSON.parse(localStorage.getItem("user")).id);
 
-            // Cập nhật localStorage
-            const raw = localStorage.getItem("user");
-            if (raw) {
-              try {
-                const u = JSON.parse(raw);
-                u.score = data.score;
-                u.week_score = data.week_score;
-                localStorage.setItem("user", JSON.stringify(u));
-              } catch (err) {
-                console.warn("Không cập nhật được user trong localStorage:", err);
-              }
+    if (userId) {
+      incrementScoreOnServer(userId, 1).then((data) => {
+        if (data && data.success) {
+          setUserScore(data.score);
+          setWeekScore(data.week_score ?? 0);
+
+          // Cập nhật localStorage
+          const raw = localStorage.getItem("user");
+          if (raw) {
+            try {
+              const u = JSON.parse(raw);
+              u.score = data.score;
+              u.week_score = data.week_score;
+              localStorage.setItem("user", JSON.stringify(u));
+            } catch (err) {
+              console.warn("Không cập nhật được user trong localStorage:", err);
             }
           }
-        });
-      }
-
-      // Chuyển câu hỏi tiếp theo sau 1 giây
-      setTimeout(() => {
-        if (currentQuestionIndex < qs.length - 1) {
-          setCurrentQuestionIndex(prev => prev + 1);
-          setMessage("");
-        } else {
-          setGameActive(false);
-          setMessage("Chúc mừng! Bạn đã hoàn thành tất cả câu hỏi!");
         }
-      }, 1000);
-    } else {
-      // Chém sai - kết thúc game
-      setGameActive(false);
-      setMessage("Chém sai! Game Over!");
+      });
     }
+
+    // Chuyển câu hỏi tiếp theo sau 1 giây
+    setTimeout(() => {
+      if (currentQuestionIndex < qs.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setMessage("");
+      } else {
+        setGameActive(false);
+        setMessage("🎉 Chúc mừng! Bạn đã hoàn thành tất cả câu hỏi!");
+      }
+    }, 1000);
+  } else {
+    // ❌ Chém sai - kết thúc game
+    setGameActive(false);
+    setMessage("💥 Chém sai! Game Over!");
   }
+}
+
 
   return (
     <div style={{ 
@@ -404,7 +423,7 @@ export default function Game1({ payload }) {
               >
                 <path
                   d={`M ${slicePath.map(p => `${p.x},${p.y}`).join(" L ")}`}
-                  stroke="#FFD700"
+                  stroke="#008cffff"
                   strokeWidth="3"
                   fill="none"
                   strokeLinecap="round"
