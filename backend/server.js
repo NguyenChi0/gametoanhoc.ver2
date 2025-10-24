@@ -147,7 +147,7 @@ app.get('/api/operations/:type_id', async (req, res) => {
 //    - operation_id đủ để lấy đúng nhóm phép toán; nhưng endpoint hỗ trợ mọi kết hợp
 app.get('/api/questions', async (req, res) => {
   try {
-    const { grade_id, type_id, operation_id, limit = 50, offset = 0, random = '0' } = req.query;
+    const { grade_id, type_id, operation_id, limit = 200, offset = 0, random = '0' } = req.query;
 
     const where = [];
     const params = [];

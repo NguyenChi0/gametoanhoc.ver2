@@ -1,184 +1,221 @@
 // src/components/chooselesson.jsx
 import React, { useState, useEffect } from "react";
-import {
-  getGrades,
-  getTypes,
-  getOperations,
-  getQuestions,
-} from "../api"; // 👈 import file api.js
+import { getGrades, getTypes, getOperations, getQuestions } from "../api";
 
-export default function ChooseLesson({ onStartGame }) {
+export default function ChooseLessonTree({ onStartGame }) {
   const [grades, setGrades] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [operations, setOperations] = useState([]);
-  const [questions, setQuestions] = useState([]);
-
-  const [selectedGrade, setSelectedGrade] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedOperation, setSelectedOperation] = useState("");
+  const [expandedGrades, setExpandedGrades] = useState({});
+  const [expandedTypes, setExpandedTypes] = useState({});
+  const [expandedOperations, setExpandedOperations] = useState({});
+  const [cache, setCache] = useState({ types: {}, operations: {}, questions: {} });
   const [selectedGameInterface, setSelectedGameInterface] = useState("game1");
-
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // --- LẤY DANH SÁCH LỚP ---
+  const gameOptions = [
+    { id: "game1", label: "Ai là triệu phú" },
+    { id: "game2", label: "Diệt ruồi" },
+    { id: "game3", label: "Phi tiêu" },
+    { id: "game4", label: "Vượt chướng ngại vật" },
+    { id: "game5", label: "Tìm người nói thật" },
+    { id: "game6", label: "Chém hoa quả" },
+    { id: "game7", label: "Nhà thám hiểm tài ba" },
+    { id: "game8", label: "Làm bài giúp Nobita" },
+    { id: "game9", label: "Dẫn thỏ về hang" },
+    { id: "game10", label: "Test" },
+  ];
+
   useEffect(() => {
     getGrades()
       .then(setGrades)
       .catch((err) => setError(err.message));
   }, []);
 
-  // --- LẤY DẠNG BÀI ---
-  useEffect(() => {
-    if (!selectedGrade) {
-      setTypes([]);
-      setOperations([]);
-      setQuestions([]);
-      return;
+  const toggleGrade = async (gradeId) => {
+    setExpandedGrades((prev) => ({ ...prev, [gradeId]: !prev[gradeId] }));
+    if (!cache.types[gradeId]) {
+      const types = await getTypes(gradeId);
+      setCache((prev) => ({ ...prev, types: { ...prev.types, [gradeId]: types } }));
     }
-    getTypes(selectedGrade)
-      .then(setTypes)
-      .catch((err) => setError(err.message));
-  }, [selectedGrade]);
+  };
 
-  // --- LẤY PHÉP TOÁN ---
-  useEffect(() => {
-    if (!selectedType) {
-      setOperations([]);
-      setQuestions([]);
-      return;
+  const toggleType = async (typeId, gradeId) => {
+    setExpandedTypes((prev) => ({ ...prev, [typeId]: !prev[typeId] }));
+    if (!cache.operations[typeId]) {
+      const operations = await getOperations(typeId);
+      setCache((prev) => ({ ...prev, operations: { ...prev.operations, [typeId]: operations } }));
     }
-    getOperations(selectedType)
-      .then(setOperations)
-      .catch((err) => setError(err.message));
-  }, [selectedType]);
+  };
 
-  // --- LẤY CÂU HỎI ---
-  useEffect(() => {
-    if (!selectedOperation) return;
-    setLoading(true);
-    getQuestions({
-      grade_id: selectedGrade,
-      type_id: selectedType,
-      operation_id: selectedOperation,
-    })
-      .then((res) => setQuestions(res.data || res))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [selectedOperation]);
+  const toggleOperation = async (operationId, typeId, gradeId) => {
+    setExpandedOperations((prev) => ({
+      ...prev,
+      [operationId]: !prev[operationId],
+    }));
 
-  // --- BẮT ĐẦU CHƠI ---
-  const handleStart = () => {
-    if (!selectedGrade || !selectedType || !selectedOperation) {
-      setError("Vui lòng chọn đủ lớp → dạng bài → phép toán trước khi chơi.");
-      return;
+    if (!cache.questions[operationId]) {
+      setLoading(true);
+      try {
+        const res = await getQuestions({
+          grade_id: gradeId,
+          type_id: typeId,
+          operation_id: operationId,
+        });
+        setCache((prev) => ({
+          ...prev,
+          questions: { ...prev.questions, [operationId]: res.data || res },
+        }));
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
+  };
 
+  const handleStartGame = (grade, type, operation, questions) => {
     const rawUser = localStorage.getItem("user");
     const currentUser = rawUser ? JSON.parse(rawUser) : null;
 
-    const payload = {
-      grade: { id: selectedGrade },
-      type: { id: selectedType },
-      operation: { id: selectedOperation },
+    onStartGame(selectedGameInterface, {
+      grade: { id: grade },
+      type: { id: type },
+      operation: { id: operation },
       questions,
       user: currentUser,
-    };
-
-    onStartGame(selectedGameInterface, payload);
+    });
   };
 
-  // --- JSX ---
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ padding: 16 }}>
+      <h2>📚 Chọn bài học</h2>
+
       {error && (
-        <div style={{ color: "crimson", marginBottom: 12 }}>
-          Lỗi: {error}{" "}
-          <button onClick={() => setError(null)} style={{ marginLeft: 8 }}>
-            OK
-          </button>
+        <div style={{ color: "red" }}>
+          Lỗi: {error}
+          <button onClick={() => setError(null)}>OK</button>
         </div>
       )}
+      {loading && <div>Đang tải dữ liệu...</div>}
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
-        <div style={{ flex: 1 }}>
-          <label>Chọn lớp</label>
-          <select
-            value={selectedGrade}
-            onChange={(e) => setSelectedGrade(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-          >
-            <option value="">-- Chọn lớp --</option>
-            {grades.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <label>Chọn dạng bài</label>
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            disabled={!selectedGrade}
-            style={{ width: "100%", padding: 8 }}
-          >
-            <option value="">-- Chọn dạng bài --</option>
-            {types.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <label>Chọn phép toán</label>
-          <select
-            value={selectedOperation}
-            onChange={(e) => setSelectedOperation(e.target.value)}
-            disabled={!selectedType}
-            style={{ width: "100%", padding: 8 }}
-          >
-            <option value="">-- Chọn phép toán --</option>
-            {operations.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Chọn giao diện game */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontWeight: "bold" }}>🎮 Chọn giao diện game:</label>
+        <select
+          value={selectedGameInterface}
+          onChange={(e) => setSelectedGameInterface(e.target.value)}
+          style={{
+            marginLeft: 8,
+            padding: "6px 10px",
+            borderRadius: 6,
+            border: "1px solid #ccc",
+          }}
+        >
+          {gameOptions.map((game) => (
+            <option key={game.id} value={game.id}>
+              {game.label}
+            </option>
+          ))}
+        </select>
       </div>
 
+      {/* Cấu trúc cây */}
+<div>
+  {grades.map((g) => (
+    <div key={g.id} style={{ marginBottom: 12 }}>
       <div
         style={{
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-          marginBottom: 18,
+          cursor: "pointer",
+          fontWeight: "bold",
+          background: "#f0f0f0",
+          padding: "8px 12px",
+          borderRadius: 6,
         }}
+        onClick={() => toggleGrade(g.id)}
       >
-        <div style={{ flex: 1 }}>
-          <label>Chọn giao diện game</label>
-          <select
-            value={selectedGameInterface}
-            onChange={(e) => setSelectedGameInterface(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-          >
-            {Array.from({ length: 10 }, (_, i) => (
-              <option key={i + 1} value={`game${i + 1}`}>
-                Game {i + 1}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button onClick={handleStart} style={{ padding: "10px 14px" }}>
-          Bắt đầu chơi
-        </button>
+        📁 {g.name}
       </div>
+
+      {expandedGrades[g.id] &&
+        cache.types[g.id]?.map((t) => (
+          <div key={t.id} style={{ marginLeft: 20 }}>
+            <div
+              style={{
+                cursor: "pointer",
+                background: "#fafafa",
+                padding: "6px 10px",
+                borderRadius: 4,
+                marginTop: 6,
+              }}
+              onClick={() => toggleType(t.id, g.id)}
+            >
+              📗 {t.name}
+            </div>
+
+            {expandedTypes[t.id] &&
+              cache.operations[t.id]?.map((o) => (
+                <div
+                  key={o.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginLeft: "30px",
+                    marginTop: "6px",
+                  }}
+                >
+                  <span
+                    style={{ cursor: "pointer" }}
+                    onClick={() => toggleOperation(o.id, t.id, g.id)}
+                  >
+                    🧮 {o.name}
+                  </span>
+
+                  <button
+                    onClick={async () => {
+                      let questions = cache.questions[o.id];
+                      if (!questions) {
+                        setLoading(true);
+                        try {
+                          const res = await getQuestions({
+                            grade_id: g.id,
+                            type_id: t.id,
+                            operation_id: o.id,
+                          });
+                          questions = res.data || res;
+                          setCache((prev) => ({
+                            ...prev,
+                            questions: { ...prev.questions, [o.id]: questions },
+                          }));
+                        } catch (err) {
+                          setError(err.message);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }
+                      handleStartGame(g.id, t.id, o.id, questions);
+                    }}
+                    style={{
+                      background: "#4CAF50",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 4,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ▶ Chơi
+                  </button>
+                </div>
+              ))}
+          </div>
+        ))}
+    </div>
+  ))}
+</div>
+
+   
+
     </div>
   );
 }
